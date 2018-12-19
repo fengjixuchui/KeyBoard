@@ -39,6 +39,17 @@ typedef struct _DEVICE_EXTENSION_FOR_KBD_
 	VOID Unload(PDRIVER_OBJECT DriverObject)
 	{
 		KdPrint(("KeyBoardDriver: 驱动卸载\n"));
+
+		// 删除创建的设备
+
+		PDEVICE_OBJECT FltDeviceObject = DriverObject->DeviceObject;
+
+		while(FltDeviceObject != NULL)
+		{
+			IoDeleteDevice(FltDeviceObject);
+
+			FltDeviceObject = FltDeviceObject->NextDevice;
+		}
 		
 	}
 
