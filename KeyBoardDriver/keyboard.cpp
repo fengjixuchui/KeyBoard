@@ -152,7 +152,7 @@ typedef struct _DEVICE_EXTENSION_FOR_KBD_
 		NTSTATUS status = STATUS_SUCCESS;
 		PDEVICE_EXTENSION_FOR_KBD DeviceExtension = (PDEVICE_EXTENSION_FOR_KBD)DeviceObject->DeviceExtension;
 		IoSkipCurrentIrpStackLocation(Irp);
-		IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+		status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 		return status;
 	}
 
