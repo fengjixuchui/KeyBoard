@@ -1,5 +1,6 @@
 #pragma once
 #ifdef __cplusplus
+
 extern "C"
 {
 #endif
@@ -20,6 +21,10 @@ NTSTATUS ReadDisPatch(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 // 读完成函数
 NTSTATUS ReadCompletionRoutine(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context);
 
+// hook写派遣函数
+NTSTATUS HookWriteDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+NTSTATUS HookInstall();
 #ifdef __cplusplus
 }
 #endif

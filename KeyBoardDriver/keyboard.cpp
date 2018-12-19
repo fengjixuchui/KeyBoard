@@ -28,6 +28,9 @@ extern  "C"
 
 	extern POBJECT_TYPE * IoDriverObjectType;
 
+typedef NTSTATUS (* DispatchRoutine)(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DispatchRoutine OrignalWriteDispatch;
+
 #define DBGSTRING		"KeyBoardDriver: " 
 
 typedef struct _DEVICE_EXTENSION_FOR_KBD_
@@ -147,6 +150,8 @@ void __stdcall print_keystroke(UCHAR sch)
 		}
 
 		DriverObject->MajorFunction[IRP_MJ_READ] = ReadDisPatch;
+
+		status = HookInstall();
 
 		status = AttachAllDevice(DriverObject);
 
@@ -284,6 +289,50 @@ void __stdcall print_keystroke(UCHAR sch)
 		}
 
 		return Irp->IoStatus.Status;
+	}
+
+	NTSTATUS HookWriteDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+	{
+		// 发现按键的时候并不走这里
+		KdPrint((DBGSTRING"enter HookWriteDispatch!\n"));
+		return OrignalWriteDispatch(DeviceObject, Irp);
+	}
+
+	NTSTATUS HookInstall()
+	{
+		NTSTATUS status = STATUS_SUCCESS;
+
+		// 先获取kbdclass驱动对象
+
+		PDRIVER_OBJECT KbdDriverObject = NULL;
+		UNICODE_STRING KbdClassString = RTL_CONSTANT_STRING(L"\\Driver\\KbdClass");
+
+		status = ObReferenceObjectByName(
+			&KbdClassString,
+			OBJ_CASE_INSENSITIVE,
+			NULL,
+			0,
+			*IoDriverObjectType,
+			KernelMode,
+			NULL,
+			(PVOID *)&KbdDriverObject
+		);
+
+		if(!NT_SUCCESS(status))
+		{
+			KdPrint((DBGSTRING"获取驱动对象失败\n"));
+			return status;
+		}
+		else
+		{
+			ObDereferenceObject(KbdDriverObject);
+		}
+
+		OrignalWriteDispatch = KbdDriverObject->MajorFunction[IRP_MJ_WRITE];
+
+		InterlockedExchangePointer((PVOID *)&KbdDriverObject->MajorFunction[IRP_MJ_WRITE], HookWriteDispatch);
+		
+		return status;
 	}
 
 #ifdef __cplusplus
