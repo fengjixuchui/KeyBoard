@@ -151,7 +151,7 @@ void __stdcall print_keystroke(UCHAR sch)
 
 		DriverObject->MajorFunction[IRP_MJ_READ] = ReadDisPatch;
 
-		status = HookInstall();
+		// status = HookInstall();
 
 		status = AttachAllDevice(DriverObject);
 
